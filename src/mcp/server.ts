@@ -385,7 +385,7 @@ export class N8NDocumentationMCPServer {
   }
 
   private async searchNodes(
-    query: string, 
+    query: string | undefined, 
     limit: number = 20,
     options?: { 
       mode?: 'OR' | 'AND' | 'FUZZY';
@@ -394,7 +394,12 @@ export class N8NDocumentationMCPServer {
   ): Promise<any> {
     await this.ensureInitialized();
     if (!this.db) throw new Error('Database not initialized');
-    
+
+    // Handle empty or undefined query gracefully
+    if (!query || query.trim().length === 0) {
+      return { query: query ?? '', results: [], totalCount: 0 };
+    }
+
     const searchMode = options?.mode || 'OR';
     
     // Check if FTS5 table exists
