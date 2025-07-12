@@ -199,7 +199,7 @@ export class N8NDocumentationMCPServer {
       case 'get_node_info':
         return this.getNodeInfo(args.nodeType);
       case 'search_nodes':
-        return this.searchNodes(args.query, args.limit, { mode: args.mode });
+        return this.searchNodes(args?.query ?? '', args.limit, { mode: args.mode });
       case 'list_ai_tools':
         return this.listAITools();
       case 'get_node_documentation':
