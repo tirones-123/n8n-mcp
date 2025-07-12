@@ -60,7 +60,12 @@ export async function startSSEHTTPServer() {
         version: PROJECT_VERSION,
         transport: 'Custom SSE Implementation',
         capabilities: ['http', 'sse', 'json-rpc'],
-        auth: 'Bearer token required'
+        auth: 'Bearer token required',
+        endpoints: {
+          mcp: '/mcp (GET for SSE, POST for JSON-RPC)',
+          sse: '/sse (GET for SSE, POST for JSON-RPC)',
+          health: '/health'
+        }
       });
     });
 
@@ -96,8 +101,8 @@ export async function startSSEHTTPServer() {
       next();
     };
 
-    // SSE endpoint for Claude API
-    app.get('/mcp', authenticate, (req, res) => {
+    // SSE endpoint for Claude API (both /mcp and /sse for compatibility)
+    const sseHandler = (req: express.Request, res: express.Response) => {
       // Set SSE headers
       res.setHeader('Content-Type', 'text/event-stream');
       res.setHeader('Cache-Control', 'no-cache');
@@ -127,10 +132,14 @@ export async function startSSEHTTPServer() {
       });
 
       logger.info('SSE connection established');
-    });
+    };
 
-    // Main MCP endpoint for JSON-RPC
-    app.post('/mcp', authenticate, async (req, res) => {
+    // Register SSE handler for both endpoints
+    app.get('/mcp', authenticate, sseHandler);
+    app.get('/sse', authenticate, sseHandler);
+
+    // Main MCP endpoint for JSON-RPC (both /mcp and /sse for compatibility)
+    const jsonRpcHandler = async (req: express.Request, res: express.Response) => {
       try {
         const { method, params, id } = req.body;
         
@@ -211,7 +220,11 @@ export async function startSSEHTTPServer() {
         
         res.status(500).json(errorResponse);
       }
-    });
+    };
+
+    // Register JSON-RPC handler for both endpoints
+    app.post('/mcp', authenticate, jsonRpcHandler);
+    app.post('/sse', authenticate, jsonRpcHandler);
 
     // Start server
     const port = parseInt(process.env.PORT || '3000');
@@ -220,7 +233,9 @@ export async function startSSEHTTPServer() {
     const server = app.listen(port, host, () => {
       console.log(`🚀 n8n MCP SSE-enabled HTTP Server running on ${host}:${port}`);
       console.log(`📊 Health check: http://localhost:${port}/health`);
-      console.log(`🔌 MCP endpoint: http://localhost:${port}/mcp`);
+      console.log(`🔌 MCP endpoints:`);
+      console.log(`   - http://localhost:${port}/mcp (GET for SSE, POST for JSON-RPC)`);
+      console.log(`   - http://localhost:${port}/sse (GET for SSE, POST for JSON-RPC)`);
       console.log(`✨ Supports: HTTP JSON-RPC and Server-Sent Events (SSE)`);
       console.log(`🔐 Authentication: Bearer token required`);
       console.log(`🎯 Optimized for Claude API MCP connector`);

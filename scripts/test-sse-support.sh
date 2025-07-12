@@ -25,14 +25,25 @@ curl -s -X POST "$SERVER_URL/mcp" \
   -d '{"jsonrpc":"2.0","method":"initialize","params":{},"id":1}'
 echo ""
 
-# Test 3: SSE connection
-echo "3️⃣ SSE Connection Test:"
+# Test 3: SSE connection (/mcp endpoint)
+echo "3️⃣ SSE Connection Test (/mcp):"
 echo "Attempting SSE connection (5 seconds timeout)..."
 timeout 5 curl -N \
   -H "Authorization: Bearer $AUTH_TOKEN" \
   -H "Accept: text/event-stream" \
   -H "Cache-Control: no-cache" \
   "$SERVER_URL/mcp" \
+  -w "\nHTTP Status: %{http_code}\n" 2>/dev/null || echo "SSE connection failed or timed out"
+echo ""
+
+# Test 3b: SSE connection (/sse endpoint)
+echo "3️⃣b SSE Connection Test (/sse):"
+echo "Attempting SSE connection (5 seconds timeout)..."
+timeout 5 curl -N \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Accept: text/event-stream" \
+  -H "Cache-Control: no-cache" \
+  "$SERVER_URL/sse" \
   -w "\nHTTP Status: %{http_code}\n" 2>/dev/null || echo "SSE connection failed or timed out"
 echo ""
 
@@ -73,14 +84,24 @@ else
 fi
 echo ""
 
-# Test 6: Test with Claude API format
-echo "6️⃣ Claude API Compatibility Test:"
+# Test 6: Test with Claude API format (/mcp)
+echo "6️⃣ Claude API Compatibility Test (/mcp):"
 curl -s -X POST "$SERVER_URL/mcp" \
   -H "Authorization: Bearer $AUTH_TOKEN" \
   -H "Content-Type: application/json" \
   -H "User-Agent: Claude-API/1.0" \
   -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":"claude-test"}' | jq '.result.tools | length' 2>/dev/null && \
-echo "✅ Claude API format compatible" || echo "❌ Claude API format failed"
+echo "✅ Claude API format compatible (/mcp)" || echo "❌ Claude API format failed (/mcp)"
+echo ""
+
+# Test 6b: Test with Claude API format (/sse)
+echo "6️⃣b Claude API Compatibility Test (/sse):"
+curl -s -X POST "$SERVER_URL/sse" \
+  -H "Authorization: Bearer $AUTH_TOKEN" \
+  -H "Content-Type: application/json" \
+  -H "User-Agent: Claude-API/1.0" \
+  -d '{"jsonrpc":"2.0","method":"tools/list","params":{},"id":"claude-test"}' | jq '.result.tools | length' 2>/dev/null && \
+echo "✅ Claude API format compatible (/sse)" || echo "❌ Claude API format failed (/sse)"
 echo ""
 
 echo "🎯 Test Summary:"
