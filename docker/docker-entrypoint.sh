@@ -13,21 +13,11 @@ if [ -n "$AUTH_TOKEN_FILE" ] && [ ! -f "$AUTH_TOKEN_FILE" ]; then
     exit 1
 fi
 
-# Database initialization with file locking to prevent race conditions
+# Database check - should already be present from Docker build
 if [ ! -f "/app/data/nodes.db" ]; then
-    echo "Database not found. Initializing..."
-    # Use a lock file to prevent multiple containers from initializing simultaneously
-    (
-        flock -x 200
-        # Double-check inside the lock
-        if [ ! -f "/app/data/nodes.db" ]; then
-            echo "Initializing database..."
-            cd /app && node dist/scripts/rebuild.js || {
-                echo "ERROR: Database initialization failed"
-                exit 1
-            }
-        fi
-    ) 200>/app/data/.db.lock
+    echo "ERROR: Database not found. This should not happen in production." >&2
+    echo "The database should be copied during Docker build." >&2
+    exit 1
 fi
 
 # Fix permissions if running as root (for development)
@@ -66,6 +56,11 @@ if [ "$MCP_MODE" = "stdio" ]; then
     fi
 else
     # HTTP mode or other - directly run the main command
-    echo "Starting in HTTP mode..." >&2
+    echo "Starting in HTTP mode..."
+    echo "Environment: MCP_MODE=$MCP_MODE, USE_SSE=$USE_SSE, PORT=$PORT"
+    echo "Files check:"
+    ls -la /app/dist/mcp/index.js || echo "index.js not found!"
+    ls -la /app/data/nodes.db || echo "nodes.db not found!"
+    echo "Executing: node /app/dist/mcp/index.js"
     exec node /app/dist/mcp/index.js
 fi

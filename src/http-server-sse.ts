@@ -217,13 +217,25 @@ export async function startSSEHTTPServer() {
     const port = parseInt(process.env.PORT || '3000');
     const host = process.env.HOST || '0.0.0.0';
     
-    app.listen(port, host, () => {
+    const server = app.listen(port, host, () => {
       console.log(`🚀 n8n MCP SSE-enabled HTTP Server running on ${host}:${port}`);
       console.log(`📊 Health check: http://localhost:${port}/health`);
       console.log(`🔌 MCP endpoint: http://localhost:${port}/mcp`);
       console.log(`✨ Supports: HTTP JSON-RPC and Server-Sent Events (SSE)`);
       console.log(`🔐 Authentication: Bearer token required`);
       console.log(`🎯 Optimized for Claude API MCP connector`);
+      
+      // Signal that server is ready for Railway
+      console.log('SERVER_READY');
+    });
+    
+    // Handle shutdown gracefully
+    process.on('SIGTERM', () => {
+      console.log('Received SIGTERM, shutting down gracefully...');
+      server.close(() => {
+        console.log('Server closed');
+        process.exit(0);
+      });
     });
   } catch (error) {
     console.error('Failed to start SSE HTTP server:', error);

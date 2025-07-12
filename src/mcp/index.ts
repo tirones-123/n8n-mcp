@@ -26,9 +26,15 @@ async function main() {
   try {
     // Only show debug messages in HTTP mode to avoid corrupting stdio communication
     if (mode === 'http') {
-      console.error(`Starting n8n Documentation MCP Server in ${mode} mode...`);
-      console.error('Current directory:', process.cwd());
-      console.error('Node version:', process.version);
+      console.log(`Starting n8n Documentation MCP Server in ${mode} mode...`);
+      console.log('Current directory:', process.cwd());
+      console.log('Node version:', process.version);
+      console.log('Environment variables:');
+      console.log('  MCP_MODE:', process.env.MCP_MODE);
+      console.log('  USE_SSE:', process.env.USE_SSE);
+      console.log('  USE_FIXED_HTTP:', process.env.USE_FIXED_HTTP);
+      console.log('  PORT:', process.env.PORT);
+      console.log('  AUTH_TOKEN:', process.env.AUTH_TOKEN ? 'SET' : 'NOT SET');
     }
     
     if (mode === 'http') {
