@@ -93,7 +93,8 @@ export const n8nDocumentationToolsFinal: ToolDefinition[] = [
           default: 'OR',
         },
       },
-      required: ['query'],
+      // query is optional to avoid errors with empty input
+      // required: ['query'],
     },
   },
   {
