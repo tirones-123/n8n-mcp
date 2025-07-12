@@ -65,6 +65,7 @@ if [ "$MCP_MODE" = "stdio" ]; then
         exec env MCP_MODE=stdio DISABLE_CONSOLE_OUTPUT=true LOG_LEVEL=error node /app/dist/mcp/index.js
     fi
 else
-    # HTTP mode or other
-    exec "$@"
+    # HTTP mode or other - directly run the main command
+    echo "Starting in HTTP mode..." >&2
+    exec node /app/dist/mcp/index.js
 fi
